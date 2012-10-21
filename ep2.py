@@ -19,17 +19,27 @@ def convolute(convolution, matrix):
          matrix_copy[i][j] = convolution_step(convolution, matrix, i, j)
    return matrix_copy
 
-image = lena()
+def blur(image):
+   blur_kernel = array([[1.0/16.0,2.0/16.0,1.0/16.0],
+                        [2.0/16.0,4.0/16.0,3.0/16.0],
+                        [1.0/16.0,2.0/16.0,1.0/16.0]])
+   blur = convolute(blur_kernel, image)
+   return blur
+   
+def laplacian(image):
+   laplacian_kernel = array([[-1, -1, -1],
+                             [-1,  8, -1],
+                             [-1, -1, -1]])
+   laplacian = convolute(laplacian_kernel, image)
+   return laplacian
 
-blur_kernel = array([[1.0/16.0,2.0/16.0,1.0/16.0],
-                     [2.0/16.0,4.0/16.0,3.0/16.0],
-                     [1.0/16.0,2.0/16.0,1.0/16.0]])
-blur = convolute(blur_kernel, image)
-laplacian_kernel = array([[-1, -1, -1],
-                          [-1,  8, -1],
-                          [-1, -1, -1]])
-laplacian = convolute(laplacian_kernel, image)
+def sharpen(image):
+   return (image + laplacian(image))
+
+image = lena()
+result = laplacian(image)
 
 plt.gray()
-plt.imshow(image + laplacian)
+plt.imshow(result)
+print result
 plt.show()
