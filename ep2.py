@@ -2,6 +2,7 @@
 
 from scipy import *
 import matplotlib.pyplot as plt
+import scipy.ndimage.measurements as meas
 
 def convolution_step(convolution, matrix, i, j):
    element = 0.0
@@ -33,13 +34,22 @@ def laplacian(image):
    laplacian = convolute(laplacian_kernel, image)
    return laplacian
 
+def emboss(image):
+   emboss_kernel = array([[ 4, 0, 0],
+                          [ 0, 0, 0],
+                          [ 0, 0, -4]])
+   emboss = convolute(emboss_kernel, image)
+   return emboss
+
 def sharpen(image):
    return (image + laplacian(image))
 
 image = lena()
-result = laplacian(image)
-
-plt.gray()
-plt.imshow(result)
-print result
+result = emboss(image)
+histo = meas.histogram(image,0,255,256)
+hist_indexes = arange(256)
+#plt.gray()
+#plt.imshow(result)
+plt.bar(hist_indexes, histo)
+print 'histo:', histo 
 plt.show()
