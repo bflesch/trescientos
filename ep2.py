@@ -11,7 +11,8 @@ group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument("-blur", action='store_true', help="suavizacao por media ponderada")
 group.add_argument("-contrast", action='store_true', help="ajuste de contraste por suavizacao de histograma")
 group.add_argument("-sharpen", action='store_true', help="realce atraves da aplicacao do operador Lagrangiano")
-parser.parse_args()
+group.add_argument("-emboss", action='store_true', help="filtro de alto relevo")
+args = parser.parse_args()
 
 def convolution_step(convolution, matrix, i, j):
    element = 0.0
@@ -47,15 +48,22 @@ def accumulate(histogram_array):
       histogram_array[i] = current
    return histogram_array
 
+def first_nonzero(array):
+   for i in array:
+      if i != 0:
+         return i
+   return 0
+
 def contrast_normalization(image):
    normalized_image = zeros(image.shape,dtype=int32)
    accumulated_histogram = accumulate(histogram(image))
    minimum_distribution = first_nonzero(accumulated_histogram)
+   print "minimum:::", minimum_distribution
    m = image.shape[0]
    n = image.shape[1]
    for i in range(0, m):
       for j in range(0, n):
-         normalized_image[i][j] = round((accumulated_histogram[image[i][j]] - minimum_distribution) / (((m * n) - minimum_distribution) * 255.0) )
+         normalized_image[i][j] = round(((accumulated_histogram[image[i][j]] - minimum_distribution) * 255.0) / ((m * n) - minimum_distribution) )
    return normalized_image
 
 def blur(image):
@@ -79,15 +87,32 @@ def emboss(image):
    emboss = convolute(emboss_kernel, image)
    return emboss
 
+def truncate(image):
+   m = image.shape[0]
+   n = image.shape[1]
+   for i in range(0, m):
+      for j in range(0, n):
+         if (image[i][j] > 255):
+            image[i][j] = 255
+         elif (image[i][j] < 0):
+            image[i][j] = 0
+   return image
+
 def sharpen(image):
-   return (image + laplacian(image))
+   return truncate(image + laplacian(image))
 
 image = lena()
-result = contrast_normalization(image)
-#histo = histogram(image)
+if (args.contrast):
+   result = contrast_normalization(image)
+elif (args.blur):
+   result = blur(image)
+elif (args.sharpen):
+   result = sharpen(image)
+elif (args.emboss):
+   result = emboss(image)
 #hist_indexes = arange(256)
 plt.gray()
 plt.imshow(result)
 #plt.bar(hist_indexes, histo)
-#print 'histo:', histo 
 plt.show()
+#print(result)
