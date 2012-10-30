@@ -3,10 +3,11 @@
 from scipy import *
 import matplotlib.pyplot as plt
 import scipy.ndimage.measurements as meas
+import scipy.misc as misc
 import argparse
 
 parser = argparse.ArgumentParser(description='ep2 de MAC0300; aplica filtros em imagens JPG grayscale.')
-parser.add_argument("imagem", help="imagem a ser usada")
+parser.add_argument("image_name", help="imagem a ser usada", metavar="imagem")
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument("-blur", action='store_true', help="suavizacao por media ponderada")
 group.add_argument("-contrast", action='store_true', help="ajuste de contraste por suavizacao de histograma")
@@ -101,7 +102,8 @@ def truncate(image):
 def sharpen(image):
    return truncate(image + laplacian(image))
 
-image = lena()
+image  = misc.imread(args.image_name, True)
+#image = lena()
 if (args.contrast):
    result = contrast_normalization(image)
 elif (args.blur):
