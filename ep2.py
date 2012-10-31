@@ -7,12 +7,13 @@ import scipy.misc as misc
 import argparse
 
 parser = argparse.ArgumentParser(description='ep2 de MAC0300; aplica filtros em imagens JPG grayscale.')
-parser.add_argument("image_name", help="imagem a ser usada", metavar="imagem")
+parser.add_argument("image_name", help="imagem a ser usada; se nao informada, usa-se a imagem provida pela funcao lena()", nargs='?', default=False, metavar="imagem")
+parser.add_argument("-e", "--explode",action='store_true', required=False, help="ignorar limiares de espectro")
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument("-blur", action='store_true', help="suavizacao por media ponderada")
 group.add_argument("-contrast", action='store_true', help="ajuste de contraste por suavizacao de histograma")
 group.add_argument("-sharpen", action='store_true', help="realce atraves da aplicacao do operador Lagrangiano")
-group.add_argument("-emboss", action='store_true', help="filtro de alto relevo")
+group.add_argument("-emboss", action='store_true', help="filtro de efeito de alto relevo")
 args = parser.parse_args()
 
 def convolution_step(convolution, matrix, i, j):
@@ -81,12 +82,20 @@ def laplacian(image):
    laplacian = convolute(laplacian_kernel, image)
    return laplacian
 
+def sharpen(image):
+   return image + laplacian(image)
+
 def emboss(image):
    emboss_kernel = array([[ 4, 0, 0],
                           [ 0, 0, 0],
                           [ 0, 0, -4]])
    emboss = convolute(emboss_kernel, image)
    return emboss
+
+def truncate_option(image):
+   if args.explode:
+      return image
+   return truncate(image)
 
 def truncate(image):
    m = image.shape[0]
@@ -99,22 +108,34 @@ def truncate(image):
             image[i][j] = 0
    return image
 
-def sharpen(image):
-   return truncate(image + laplacian(image))
+image_name = args.image_name
+if image_name:
+   image  = misc.imread(args.image_name, True)
+   image_path, last_slash, image_name = image_name.rpartition('/') 
+else:
+   image_name = 'lena.jpg'
+   image = lena()
+result_base, dot_char, extension = image_name.rpartition('.')
 
-image  = misc.imread(args.image_name, True)
-#image = lena()
 if (args.contrast):
-   result = contrast_normalization(image)
+   result = truncate_option(contrast_normalization(image))
+   transform = "contrast"
 elif (args.blur):
    result = blur(image)
+   transform = "blur"
 elif (args.sharpen):
-   result = sharpen(image)
+   result = truncate_option(sharpen(image))
+   transform = "sharpen"
 elif (args.emboss):
-   result = emboss(image)
+   result = truncate_option(emboss(image))
+   transform = "emboss"
+result_name = "".join([result_base, "-", transform, dot_char, extension])
+print result_name
+
 #hist_indexes = arange(256)
-plt.gray()
-plt.imshow(result)
+#plt.gray()
+#plt.imshow(result)
 #plt.bar(hist_indexes, histo)
-plt.show()
+#plt.show()
 #print(result)
+misc.imsave(result_name, result)
