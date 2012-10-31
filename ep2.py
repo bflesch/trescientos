@@ -60,7 +60,6 @@ def contrast_normalization(image):
    normalized_image = zeros(image.shape,dtype=int32)
    accumulated_histogram = accumulate(histogram(image))
    minimum_distribution = first_nonzero(accumulated_histogram)
-   print "minimum:::", minimum_distribution
    m = image.shape[0]
    n = image.shape[1]
    for i in range(0, m):
@@ -132,10 +131,4 @@ elif (args.emboss):
 result_name = "".join([result_base, "-", transform, dot_char, extension])
 print result_name
 
-#hist_indexes = arange(256)
-#plt.gray()
-#plt.imshow(result)
-#plt.bar(hist_indexes, histo)
-#plt.show()
-#print(result)
 misc.imsave(result_name, result)
